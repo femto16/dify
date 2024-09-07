@@ -4,8 +4,9 @@ import React, { useMemo, useState } from 'react'
 import useSWR from 'swr'
 import { useTranslation } from 'react-i18next'
 import { useRouter } from 'next/navigation'
-import { debounce, groupBy, omit } from 'lodash-es'
+import { groupBy, omit } from 'lodash-es'
 import { PlusIcon } from '@heroicons/react/24/solid'
+import { useDebounce } from 'ahooks'
 import List from './list'
 import s from './style.module.css'
 import Loading from '@/app/components/base/loading'
@@ -87,9 +88,11 @@ const Documents: FC<IDocumentsProps> = ({ datasetId }) => {
   const isDataSourceFile = dataset?.data_source_type === DataSourceType.FILE
   const embeddingAvailable = !!dataset?.embedding_available
 
+  const debouncedSearchValue = useDebounce(searchValue, { wait: 500 })
+
   const query = useMemo(() => {
-    return { page: currPage + 1, limit, keyword: searchValue, fetch: isDataSourceNotion ? true : '' }
-  }, [searchValue, currPage, isDataSourceNotion])
+    return { page: currPage + 1, limit, keyword: debouncedSearchValue, fetch: isDataSourceNotion ? true : '' }
+  }, [currPage, debouncedSearchValue, isDataSourceNotion])
 
   const { data: documentsRes, error, mutate } = useSWR(
     {
@@ -201,10 +204,10 @@ const Documents: FC<IDocumentsProps> = ({ datasetId }) => {
       <div className='flex flex-col px-6 py-4 flex-1'>
         <div className='flex items-center justify-between flex-wrap'>
           <Input
-            showPrefix
+            showLeftIcon
             wrapperClassName='!w-[200px]'
             className='!h-8 !text-[13px]'
-            onChange={debounce(setSearchValue, 500)}
+            onChange={e => setSearchValue(e.target.value)}
             value={searchValue}
           />
           <div className='flex gap-2 justify-center items-center !h-8'>

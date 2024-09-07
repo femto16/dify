@@ -1,8 +1,5 @@
 import { useState } from 'react'
 import type { FC } from 'react'
-import {
-  RiQuestionLine,
-} from '@remixicon/react'
 import { ValidatingTip } from '../../key-validator/ValidateStatus'
 import type {
   CredentialFormSchema,
@@ -18,7 +15,7 @@ import { useLanguage } from '../hooks'
 import Input from './Input'
 import cn from '@/utils/classnames'
 import { SimpleSelect } from '@/app/components/base/select'
-import Tooltip from '@/app/components/base/tooltip-plus'
+import Tooltip from '@/app/components/base/tooltip'
 import Radio from '@/app/components/base/radio'
 type FormProps = {
   className?: string
@@ -73,15 +70,14 @@ const Form: FC<FormProps> = ({
   const renderField = (formSchema: CredentialFormSchema) => {
     const tooltip = formSchema.tooltip
     const tooltipContent = (tooltip && (
-      <span className='ml-1 pt-1.5'>
-        <Tooltip popupContent={
-          // w-[100px] caused problem
-          <div className=''>
-            {tooltip[language] || tooltip.en_US}
-          </div>
-        } >
-          <RiQuestionLine className='w-3 h-3  text-gray-500' />
-        </Tooltip>
+      <span className='ml-1'>
+        <Tooltip
+          popupContent={
+            <div className='w-[200px]'>
+              {tooltip[language] || tooltip.en_US}
+            </div>}
+          triggerClassName='w-4 h-4'
+        />
       </span>))
     if (formSchema.type === FormTypeEnum.textInput || formSchema.type === FormTypeEnum.secretInput || formSchema.type === FormTypeEnum.textNumber) {
       const {
@@ -98,7 +94,7 @@ const Form: FC<FormProps> = ({
       const disabed = readonly || (isEditMode && (variable === '__model_type' || variable === '__model_name'))
       return (
         <div key={variable} className={cn(itemClassName, 'py-3')}>
-          <div className={cn(fieldLabelClassName, 'py-2 text-sm text-gray-900')}>
+          <div className={cn(fieldLabelClassName, 'flex items-center py-2 text-sm text-gray-900')}>
             {label[language] || label.en_US}
             {
               required && (
@@ -139,7 +135,7 @@ const Form: FC<FormProps> = ({
 
       return (
         <div key={variable} className={cn(itemClassName, 'py-3')}>
-          <div className={cn(fieldLabelClassName, 'py-2 text-sm text-gray-900')}>
+          <div className={cn(fieldLabelClassName, 'flex items-center py-2 text-sm text-gray-900')}>
             {label[language] || label.en_US}
             {
               required && (
@@ -195,7 +191,7 @@ const Form: FC<FormProps> = ({
 
       return (
         <div key={variable} className={cn(itemClassName, 'py-3')}>
-          <div className={cn(fieldLabelClassName, 'py-2 text-sm text-gray-900')}>
+          <div className={cn(fieldLabelClassName, 'flex items-center py-2 text-sm text-gray-900')}>
             {label[language] || label.en_US}
 
             {
@@ -239,7 +235,7 @@ const Form: FC<FormProps> = ({
         <div key={variable} className={cn(itemClassName, 'py-3')}>
           <div className='flex items-center justify-between py-2 text-sm text-gray-900'>
             <div className='flex items-center space-x-2'>
-              <span className={cn(fieldLabelClassName, 'py-2 text-sm text-gray-900')}>{label[language] || label.en_US}</span>
+              <span className={cn(fieldLabelClassName, 'flex items-center py-2 text-sm text-gray-900')}>{label[language] || label.en_US}</span>
               {
                 required && (
                   <span className='ml-1 text-red-500'>*</span>
