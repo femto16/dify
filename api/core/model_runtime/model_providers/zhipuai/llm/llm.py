@@ -1,6 +1,10 @@
 from collections.abc import Generator
 from typing import Optional, Union
 
+from zhipuai import ZhipuAI
+from zhipuai.types.chat.chat_completion import Completion
+from zhipuai.types.chat.chat_completion_chunk import ChatCompletionChunk
+
 from core.model_runtime.entities.llm_entities import LLMResult, LLMResultChunk, LLMResultChunkDelta
 from core.model_runtime.entities.message_entities import (
     AssistantPromptMessage,
@@ -16,9 +20,6 @@ from core.model_runtime.entities.message_entities import (
 from core.model_runtime.errors.validate import CredentialsValidateFailedError
 from core.model_runtime.model_providers.__base.large_language_model import LargeLanguageModel
 from core.model_runtime.model_providers.zhipuai._common import _CommonZhipuaiAI
-from core.model_runtime.model_providers.zhipuai.zhipuai_sdk._client import ZhipuAI
-from core.model_runtime.model_providers.zhipuai.zhipuai_sdk.types.chat.chat_completion import Completion
-from core.model_runtime.model_providers.zhipuai.zhipuai_sdk.types.chat.chat_completion_chunk import ChatCompletionChunk
 from core.model_runtime.utils import helper
 
 GLM_JSON_MODE_PROMPT = """You should always follow the instructions and output a valid JSON object.
@@ -186,10 +187,10 @@ class ZhipuAILargeLanguageModel(_CommonZhipuaiAI, LargeLanguageModel):
         new_prompt_messages: list[PromptMessage] = []
         for prompt_message in prompt_messages:
             copy_prompt_message = prompt_message.copy()
-            if copy_prompt_message.role in [PromptMessageRole.USER, PromptMessageRole.SYSTEM, PromptMessageRole.TOOL]:
+            if copy_prompt_message.role in {PromptMessageRole.USER, PromptMessageRole.SYSTEM, PromptMessageRole.TOOL}:
                 if isinstance(copy_prompt_message.content, list):
                     # check if model is 'glm-4v'
-                    if model not in ("glm-4v", "glm-4v-plus"):
+                    if model not in {"glm-4v", "glm-4v-plus"}:
                         # not support list message
                         continue
                     # get image and
@@ -209,10 +210,7 @@ class ZhipuAILargeLanguageModel(_CommonZhipuaiAI, LargeLanguageModel):
                 ):
                     new_prompt_messages[-1].content += "\n\n" + copy_prompt_message.content
                 else:
-                    if (
-                        copy_prompt_message.role == PromptMessageRole.USER
-                        or copy_prompt_message.role == PromptMessageRole.TOOL
-                    ):
+                    if copy_prompt_message.role in {PromptMessageRole.USER, PromptMessageRole.TOOL}:
                         new_prompt_messages.append(copy_prompt_message)
                     elif copy_prompt_message.role == PromptMessageRole.SYSTEM:
                         new_prompt_message = SystemPromptMessage(content=copy_prompt_message.content)
@@ -226,7 +224,17 @@ class ZhipuAILargeLanguageModel(_CommonZhipuaiAI, LargeLanguageModel):
                 else:
                     new_prompt_messages.append(copy_prompt_message)
 
-        if model == "glm-4v" or model == "glm-4v-plus":
+        # zhipuai moved web_search param to tools
+        if "web_search" in model_parameters:
+            enable_web_search = model_parameters.get("web_search")
+            model_parameters.pop("web_search")
+            web_search_params = {"type": "web_search", "web_search": {"enable": enable_web_search}}
+            if "tools" in model_parameters:
+                model_parameters["tools"].append(web_search_params)
+            else:
+                model_parameters["tools"] = [web_search_params]
+
+        if model in {"glm-4v", "glm-4v-plus"}:
             params = self._construct_glm_4v_parameter(model, new_prompt_messages, model_parameters)
         else:
             params = {"model": model, "messages": [], **model_parameters}
@@ -270,11 +278,11 @@ class ZhipuAILargeLanguageModel(_CommonZhipuaiAI, LargeLanguageModel):
                 # chatglm model
                 for prompt_message in new_prompt_messages:
                     # merge system message to user message
-                    if (
-                        prompt_message.role == PromptMessageRole.SYSTEM
-                        or prompt_message.role == PromptMessageRole.TOOL
-                        or prompt_message.role == PromptMessageRole.USER
-                    ):
+                    if prompt_message.role in {
+                        PromptMessageRole.SYSTEM,
+                        PromptMessageRole.TOOL,
+                        PromptMessageRole.USER,
+                    }:
                         if len(params["messages"]) > 0 and params["messages"][-1]["role"] == "user":
                             params["messages"][-1]["content"] += "\n\n" + prompt_message.content
                         else:

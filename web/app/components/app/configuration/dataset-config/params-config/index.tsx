@@ -39,12 +39,26 @@ const ParamsConfig = ({
   useEffect(() => {
     const {
       allEconomic,
+      allHighQuality,
+      allHighQualityFullTextSearch,
+      allHighQualityVectorSearch,
+      allInternal,
+      allExternal,
+      mixtureHighQualityAndEconomic,
+      inconsistentEmbeddingModel,
+      mixtureInternalAndExternal,
     } = getSelectedDatasetsMode(selectedDatasets)
     const { datasets, retrieval_model, score_threshold_enabled, ...restConfigs } = datasetConfigs
     let rerankEnable = restConfigs.reranking_enable
 
-    if (allEconomic && !restConfigs.reranking_model?.reranking_provider_name && rerankEnable === undefined)
+    if (((allInternal && allEconomic) || allExternal) && !restConfigs.reranking_model?.reranking_provider_name && rerankEnable === undefined)
       rerankEnable = false
+
+    if (allEconomic || allHighQuality || allHighQualityFullTextSearch || allHighQualityVectorSearch || (allExternal && selectedDatasets.length === 1))
+      setRerankSettingModalOpen(false)
+
+    if (mixtureHighQualityAndEconomic || inconsistentEmbeddingModel || mixtureInternalAndExternal || (allExternal && selectedDatasets.length > 1))
+      setRerankSettingModalOpen(true)
 
     setTempDataSetConfigs({
       ...getMultipleRetrievalConfig({
