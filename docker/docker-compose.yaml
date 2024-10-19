@@ -96,10 +96,6 @@ x-shared-env: &shared-api-worker-env
   VOLCENGINE_TOS_ACCESS_KEY: ${VOLCENGINE_TOS_ACCESS_KEY:-}
   VOLCENGINE_TOS_ENDPOINT: ${VOLCENGINE_TOS_ENDPOINT:-}
   VOLCENGINE_TOS_REGION: ${VOLCENGINE_TOS_REGION:-}
-  BAIDU_OBS_BUCKET_NAME: ${BAIDU_OBS_BUCKET_NAME:-}
-  BAIDU_OBS_SECRET_KEY: ${BAIDU_OBS_SECRET_KEY:-}
-  BAIDU_OBS_ACCESS_KEY: ${BAIDU_OBS_ACCESS_KEY:-}
-  BAIDU_OBS_ENDPOINT: ${BAIDU_OBS_ENDPOINT:-}
   VECTOR_STORE: ${VECTOR_STORE:-weaviate}
   WEAVIATE_ENDPOINT: ${WEAVIATE_ENDPOINT:-http://weaviate:8080}
   WEAVIATE_API_KEY: ${WEAVIATE_API_KEY:-WVF5YThaHlkYwhGUSmCRgsX3tD5ngdN8pkih}
@@ -231,7 +227,7 @@ x-shared-env: &shared-api-worker-env
 services:
   # API service
   api:
-    image: langgenius/dify-api:0.9.2
+    image: langgenius/dify-api:0.10.0-beta3
     restart: always
     environment:
       # Use the shared environment variables.
@@ -251,7 +247,7 @@ services:
   # worker service
   # The Celery worker for processing the queue.
   worker:
-    image: langgenius/dify-api:0.9.2
+    image: langgenius/dify-api:0.10.0-beta3
     restart: always
     environment:
       # Use the shared environment variables.
@@ -270,7 +266,7 @@ services:
 
   # Frontend web application.
   web:
-    image: langgenius/dify-web:0.9.2
+    image: langgenius/dify-web:0.10.0-beta3
     restart: always
     environment:
       CONSOLE_API_URL: ${CONSOLE_API_URL:-}
@@ -317,7 +313,7 @@ services:
 
   # The DifySandbox
   sandbox:
-    image: langgenius/dify-sandbox:0.2.10
+    image: langgenius/dify-sandbox:0.2.9
     restart: always
     environment:
       # The DifySandbox configurations
