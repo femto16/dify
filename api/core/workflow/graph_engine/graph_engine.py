@@ -4,6 +4,7 @@ import time
 import uuid
 from collections.abc import Generator, Mapping
 from concurrent.futures import ThreadPoolExecutor, wait
+from copy import copy, deepcopy
 from typing import Any, Optional
 
 from flask import Flask, current_app
@@ -63,7 +64,6 @@ class GraphEngineThreadPool(ThreadPoolExecutor):
         self.submit_count -= 1
 
     def check_is_full(self) -> None:
-        print(f"submit_count: {self.submit_count}, max_submit_count: {self.max_submit_count}")
         if self.submit_count > self.max_submit_count:
             raise ValueError(f"Max submit count {self.max_submit_count} of workflow thread pool reached.")
 
@@ -171,7 +171,7 @@ class GraphEngine:
                                 "answer"
                             ].strip()
                 except Exception as e:
-                    logger.exception(f"Graph run failed: {str(e)}")
+                    logger.exception("Graph run failed")
                     yield GraphRunFailedEvent(error=str(e))
                     return
 
@@ -691,7 +691,7 @@ class GraphEngine:
             )
             return
         except Exception as e:
-            logger.exception(f"Node {node_instance.node_data.title} run failed: {str(e)}")
+            logger.exception(f"Node {node_instance.node_data.title} run failed")
             raise e
         finally:
             db.session.close()
@@ -723,6 +723,16 @@ class GraphEngine:
         :return:
         """
         return time.perf_counter() - start_at > max_execution_time
+
+    def create_copy(self):
+        """
+        create a graph engine copy
+        :return: with a new variable pool instance of graph engine
+        """
+        new_instance = copy(self)
+        new_instance.graph_runtime_state = copy(self.graph_runtime_state)
+        new_instance.graph_runtime_state.variable_pool = deepcopy(self.graph_runtime_state.variable_pool)
+        return new_instance
 
 
 class GraphRunFailedError(Exception):
